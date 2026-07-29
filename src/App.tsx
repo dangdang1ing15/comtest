@@ -2,9 +2,10 @@ import { useState } from 'react';
 import './App.css';
 import SurveyTest from './SurveyTest';
 import ReportCard from './report/ReportCard';
+import WrongNote from './report/WrongNote';
 import { testData, type Level, type Answer } from './testData';
 
-type View = 'survey' | 'report';
+type View = 'survey' | 'report' | 'wrongnote';
 
 // 과외 학생이 베이직(기본) 100문항 중 실제로 틀린 문항 번호. 나머지는 전부 맞은 것으로 채점한다.
 const STUDENT_WRONG_BASIC_IDS = new Set([
@@ -56,8 +57,15 @@ export default function App() {
         >
           📊 성적표
         </button>
+        <button
+          type="button"
+          className={`app-tab ${view === 'wrongnote' ? 'active' : ''}`}
+          onClick={() => setView('wrongnote')}
+        >
+          📕 오답노트
+        </button>
       </nav>
-      {view === 'survey' ? (
+      {view === 'survey' && (
         <SurveyTest
           level={surveyLevel}
           onLevelChange={setSurveyLevel}
@@ -65,9 +73,9 @@ export default function App() {
           onAnswersChange={(next) => updateAnswers(surveyLevel, next)}
           onViewReport={() => setView('report')}
         />
-      ) : (
-        <ReportCard answersByLevel={answersByLevel} onStartTest={goToSurvey} />
       )}
+      {view === 'report' && <ReportCard answersByLevel={answersByLevel} onStartTest={goToSurvey} />}
+      {view === 'wrongnote' && <WrongNote answersByLevel={answersByLevel} onStartTest={goToSurvey} />}
     </div>
   );
 }
