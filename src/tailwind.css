@@ -1,0 +1,4 @@
+/* Utilities only — preflight (base reset) is intentionally skipped so it
+   doesn't fight with SurveyTest's hand-written global styles in index.css. */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
