@@ -105,13 +105,13 @@ function StudyPager({ pages }: { pages: StudyPage[] }) {
           type="button"
           onClick={() => goTo(pageIndex - 1)}
           disabled={pageIndex === 0}
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-30"
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 text-xl text-slate-500 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-30"
           aria-label="이전 페이지"
         >
           ‹
         </button>
 
-        <div className="min-h-[140px] flex-1 rounded-2xl bg-slate-50 p-4">
+        <div className="min-h-[360px] flex-1 rounded-2xl bg-slate-50 p-6">
           {current.type === 'explanation' ? (
             <>
               {current.content && <StudyText text={current.content} />}
@@ -122,9 +122,9 @@ function StudyPager({ pages }: { pages: StudyPage[] }) {
           ) : (
             <>
               {current.quizQuestion && (
-                <StudyText text={current.quizQuestion} className="text-sm font-semibold text-slate-800" />
+                <StudyText text={current.quizQuestion} className="text-base font-semibold text-slate-800" />
               )}
-              <div className="mt-3 flex flex-col gap-2">
+              <div className="mt-4 flex flex-col gap-2.5">
                 {(current.choices ?? []).map((choice) => {
                   const isSelected = selectedChoice === choice;
                   const isCorrect = choice === current.answer;
@@ -134,7 +134,7 @@ function StudyPager({ pages }: { pages: StudyPage[] }) {
                       key={choice}
                       type="button"
                       onClick={() => setSelectedChoice(choice)}
-                      className={`rounded-xl border px-4 py-2.5 text-left text-sm font-medium transition ${
+                      className={`rounded-xl border px-5 py-3 text-left text-base font-medium transition ${
                         showResult && isCorrect
                           ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
                           : showResult && isSelected
@@ -164,7 +164,7 @@ function StudyPager({ pages }: { pages: StudyPage[] }) {
           type="button"
           onClick={() => goTo(pageIndex + 1)}
           disabled={pageIndex === pages.length - 1}
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-30"
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 text-xl text-slate-500 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-30"
           aria-label="다음 페이지"
         >
           ›
@@ -218,67 +218,74 @@ function StudyModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">{row.part.title}</p>
+      <div
+        className="flex h-[85vh] w-[90vw] max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex flex-shrink-0 items-start justify-between gap-3 border-b border-slate-100 px-8 py-5">
+          <p className="text-sm font-bold uppercase tracking-wider text-indigo-500">{row.part.title}</p>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
             aria-label="닫기"
           >
             ✕
           </button>
         </div>
 
-        <div className="mt-3 flex gap-3 rounded-2xl bg-red-50/70 p-4">
-          <span className="font-bold text-red-500">{id}</span>
-          <span className="text-base font-medium leading-relaxed text-slate-800">{text}</span>
+        <div className="flex-1 overflow-y-auto px-8 py-6">
+          <div className="flex gap-3 rounded-2xl bg-red-50/70 p-5">
+            <span className="font-bold text-red-500">{id}</span>
+            <span className="text-lg font-medium leading-relaxed text-slate-800">{text}</span>
+          </div>
+
+          {(() => {
+            const pages = getStudyPages(id);
+            if (pages.length > 0) return <StudyPager key={id} pages={pages} />;
+            if (row.feedback)
+              return (
+                <div className="mt-4 rounded-2xl bg-indigo-50 p-5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-indigo-400">복습 코멘트</p>
+                  <p className="mt-1.5 text-base leading-relaxed text-indigo-900">{row.feedback.comment}</p>
+                  <p className="mt-2 text-base font-semibold text-indigo-700">👉 {row.feedback.actionPlan}</p>
+                </div>
+              );
+            return null;
+          })()}
         </div>
 
-        {(() => {
-          const pages = getStudyPages(id);
-          if (pages.length > 0) return <StudyPager key={id} pages={pages} />;
-          if (row.feedback)
-            return (
-              <div className="mt-4 rounded-2xl bg-indigo-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-indigo-400">복습 코멘트</p>
-                <p className="mt-1.5 text-sm leading-relaxed text-indigo-900">{row.feedback.comment}</p>
-                <p className="mt-2 text-sm font-semibold text-indigo-700">👉 {row.feedback.actionPlan}</p>
-              </div>
-            );
-          return null;
-        })()}
-
-        <button
-          type="button"
-          onClick={onToggleReviewed}
-          className={`mt-5 w-full rounded-full py-2.5 text-sm font-bold transition ${
-            reviewed
-              ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-              : 'bg-slate-900 text-white hover:bg-slate-700'
-          }`}
-        >
-          {reviewed ? '✓ 복습 완료' : '복습 완료로 표시'}
-        </button>
-
-        <div className="mt-3 flex justify-between gap-3">
+        <div className="flex-shrink-0 border-t border-slate-100 px-8 py-5">
           <button
             type="button"
-            onClick={onPrev}
-            disabled={!hasPrev}
-            className="rounded-full border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-30"
+            onClick={onToggleReviewed}
+            className={`w-full rounded-full py-3 text-sm font-bold transition ${
+              reviewed
+                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                : 'bg-slate-900 text-white hover:bg-slate-700'
+            }`}
           >
-            ← 이전 문항
+            {reviewed ? '✓ 복습 완료' : '복습 완료로 표시'}
           </button>
-          <button
-            type="button"
-            onClick={onNext}
-            disabled={!hasNext}
-            className="rounded-full border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-30"
-          >
-            다음 문항 →
-          </button>
+
+          <div className="mt-3 flex justify-between gap-3">
+            <button
+              type="button"
+              onClick={onPrev}
+              disabled={!hasPrev}
+              className="rounded-full border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              ← 이전 문항
+            </button>
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={!hasNext}
+              className="rounded-full border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              다음 문항 →
+            </button>
+          </div>
         </div>
       </div>
     </div>
