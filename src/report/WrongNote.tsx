@@ -34,6 +34,60 @@ function buildQuestionTextMap(level: Level): Map<number, string> {
 
 type Row = { part: PartScore; wrongIds: number[]; feedback: PartFeedback | undefined };
 
+// 학습 콘텐츠용 아주 가벼운 마크다운 렌더러. 빈 줄로 문단을 나누고, 한 블록의 모든 줄이
+// "1. "/"- " 로 시작하면 목록으로, 그 외엔 줄바꿈을 살린 문단으로 렌더링한다. **굵게**도 지원한다.
+function renderInline(text: string, keyPrefix: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    part.startsWith('**') && part.endsWith('**') && part.length > 4 ? (
+      <strong key={`${keyPrefix}-${i}`}>{part.slice(2, -2)}</strong>
+    ) : (
+      <span key={`${keyPrefix}-${i}`}>{part}</span>
+    ),
+  );
+}
+
+function StudyText({ text, className = 'text-sm leading-relaxed text-slate-700' }: { text: string; className?: string }) {
+  const blocks = text.trim().split(/\n{2,}/);
+  return (
+    <div className={`flex flex-col gap-3 ${className}`}>
+      {blocks.map((block, bi) => {
+        const lines = block.split('\n').filter((l) => l.trim().length > 0);
+        const isNumbered = lines.length > 1 && lines.every((l) => /^\d+\.\s/.test(l.trim()));
+        const isBulleted = lines.length > 1 && lines.every((l) => /^[-*]\s/.test(l.trim()));
+
+        if (isNumbered) {
+          return (
+            <ol key={bi} className="list-decimal space-y-1.5 pl-5">
+              {lines.map((line, li) => (
+                <li key={li}>{renderInline(line.trim().replace(/^\d+\.\s/, ''), `${bi}-${li}`)}</li>
+              ))}
+            </ol>
+          );
+        }
+        if (isBulleted) {
+          return (
+            <ul key={bi} className="list-disc space-y-1.5 pl-5">
+              {lines.map((line, li) => (
+                <li key={li}>{renderInline(line.trim().replace(/^[-*]\s/, ''), `${bi}-${li}`)}</li>
+              ))}
+            </ul>
+          );
+        }
+        return (
+          <p key={bi}>
+            {lines.map((line, li) => (
+              <span key={li}>
+                {renderInline(line, `${bi}-${li}`)}
+                {li < lines.length - 1 && <br />}
+              </span>
+            ))}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 function StudyPager({ pages }: { pages: StudyPage[] }) {
   const [pageIndex, setPageIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
@@ -60,7 +114,7 @@ function StudyPager({ pages }: { pages: StudyPage[] }) {
         <div className="min-h-[140px] flex-1 rounded-2xl bg-slate-50 p-4">
           {current.type === 'explanation' ? (
             <>
-              {current.content && <p className="text-sm leading-relaxed text-slate-700">{current.content}</p>}
+              {current.content && <StudyText text={current.content} />}
               {current.image && (
                 <img src={current.image} alt="" className="mt-3 w-full rounded-xl border border-slate-200" />
               )}
@@ -68,7 +122,7 @@ function StudyPager({ pages }: { pages: StudyPage[] }) {
           ) : (
             <>
               {current.quizQuestion && (
-                <p className="text-sm font-semibold text-slate-800">{current.quizQuestion}</p>
+                <StudyText text={current.quizQuestion} className="text-sm font-semibold text-slate-800" />
               )}
               <div className="mt-3 flex flex-col gap-2">
                 {(current.choices ?? []).map((choice) => {
