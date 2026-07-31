@@ -32,17 +32,6 @@ function buildQuestionTextMap(level: Level): Map<number, string> {
   return map;
 }
 
-// 과외 학생이 오답노트 Part 1~7까지 복습을 마친 상태로 배포하기 위한 초기값.
-// Part 1~7에 속한 문항 중 실제로 틀린(no) 것만 '복습 완료'로 미리 체크해 둔다.
-function buildInitialReviewed(basicAnswers: Map<number, Answer>): Record<Level, Set<number>> {
-  const reviewedThroughChapterIds = new Set(PART_QUESTION_IDS.basic.slice(0, 7).flat());
-  const reviewed = new Set<number>();
-  basicAnswers.forEach((value, id) => {
-    if (value === 'no' && reviewedThroughChapterIds.has(id)) reviewed.add(id);
-  });
-  return { basic: reviewed, advanced: new Set() };
-}
-
 type Row = { part: PartScore; wrongIds: number[]; feedback: PartFeedback | undefined };
 
 // 학습 콘텐츠용 아주 가벼운 마크다운 렌더러. 빈 줄로 문단을 나누고, 한 블록의 모든 줄이
@@ -305,16 +294,17 @@ function StudyModal({
 
 export default function WrongNote({
   answersByLevel,
+  reviewedByLevel,
+  onReviewedChange,
   onStartTest,
 }: {
   answersByLevel: Record<Level, Map<number, Answer>>;
+  reviewedByLevel: Record<Level, Set<number>>;
+  onReviewedChange: (level: Level, next: Set<number>) => void;
   onStartTest: (level: Level) => void;
 }) {
   const [level, setLevel] = useState<Level>('basic');
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
-  const [reviewedByLevel, setReviewedByLevel] = useState<Record<Level, Set<number>>>(() =>
-    buildInitialReviewed(answersByLevel.basic),
-  );
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const copyTimeoutRef = useRef<number | null>(null);
 
@@ -347,12 +337,10 @@ export default function WrongNote({
   const rowForId = (id: number) => rows.find((r) => r.wrongIds.includes(id));
 
   const toggleReviewed = (id: number) => {
-    setReviewedByLevel((prev) => {
-      const next = new Set(prev[level]);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return { ...prev, [level]: next };
-    });
+    const next = new Set(reviewed);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    onReviewedChange(level, next);
   };
 
   const handleCopyAll = () => {

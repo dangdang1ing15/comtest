@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 인증 없이 누구나 sharedState/main 문서를 읽고 쓸 수 있게 열어둔다(요청대로 단일 공유
+    // 데이터, 로그인 없음). 접근 범위를 이 컬렉션 하나로만 한정해 나머지 데이터베이스는 잠가둔다.
+    match /sharedState/{docId} {
+      allow read, write: if true;
+    }
+  }
+}

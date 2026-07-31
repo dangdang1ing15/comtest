@@ -3,37 +3,15 @@ import './App.css';
 import SurveyTest from './SurveyTest';
 import ReportCard from './report/ReportCard';
 import WrongNote from './report/WrongNote';
-import { testData, type Level, type Answer } from './testData';
+import type { Level } from './testData';
+import { useSharedState } from './store/sharedState';
 
 type View = 'survey' | 'report' | 'wrongnote';
-
-// 과외 학생이 베이직(기본) 100문항 중 실제로 틀린 문항 번호. 나머지는 전부 맞은 것으로 채점한다.
-const STUDENT_WRONG_BASIC_IDS = new Set([
-  7, 10, 12, 15, 16, 25, 28, 30, 33, 34, 35, 36, 44, 47, 48, 49, 50, 54, 64, 65, 66, 67, 68, 69, 70, 71, 72, 75, 76,
-  80, 81, 86, 88, 91, 92, 93, 94, 95, 96, 97, 98, 100,
-]);
-
-function buildInitialBasicAnswers(): Map<number, Answer> {
-  const answers = new Map<number, Answer>();
-  for (const part of testData.basic) {
-    for (const q of part.questions) {
-      answers.set(q.id, STUDENT_WRONG_BASIC_IDS.has(q.id) ? 'no' : 'yes');
-    }
-  }
-  return answers;
-}
 
 export default function App() {
   const [view, setView] = useState<View>('survey');
   const [surveyLevel, setSurveyLevel] = useState<Level>('basic');
-  const [answersByLevel, setAnswersByLevel] = useState<Record<Level, Map<number, Answer>>>({
-    basic: buildInitialBasicAnswers(),
-    advanced: new Map(),
-  });
-
-  const updateAnswers = (level: Level, next: Map<number, Answer>) => {
-    setAnswersByLevel((prev) => ({ ...prev, [level]: next }));
-  };
+  const { answersByLevel, reviewedByLevel, updateAnswers, updateReviewed } = useSharedState();
 
   const goToSurvey = (level: Level) => {
     setSurveyLevel(level);
@@ -75,7 +53,14 @@ export default function App() {
         />
       )}
       {view === 'report' && <ReportCard answersByLevel={answersByLevel} onStartTest={goToSurvey} />}
-      {view === 'wrongnote' && <WrongNote answersByLevel={answersByLevel} onStartTest={goToSurvey} />}
+      {view === 'wrongnote' && (
+        <WrongNote
+          answersByLevel={answersByLevel}
+          reviewedByLevel={reviewedByLevel}
+          onReviewedChange={updateReviewed}
+          onStartTest={goToSurvey}
+        />
+      )}
     </div>
   );
 }
