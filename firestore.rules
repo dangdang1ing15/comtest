@@ -7,5 +7,10 @@ service cloud.firestore {
     match /sharedState/{docId} {
       allow read, write: if true;
     }
+
+    // 수업현황(회차별 로그) — 같은 이유로 인증 없이 열어둔다.
+    match /lessonLogs/{logId} {
+      allow read, write: if true;
+    }
   }
 }

@@ -3,10 +3,11 @@ import './App.css';
 import SurveyTest from './SurveyTest';
 import ReportCard from './report/ReportCard';
 import WrongNote from './report/WrongNote';
+import LessonLog from './lesson/LessonLog';
 import type { Level } from './testData';
 import { useSharedState } from './store/sharedState';
 
-type View = 'survey' | 'report' | 'wrongnote';
+type View = 'survey' | 'report' | 'wrongnote' | 'lesson';
 
 export default function App() {
   const [view, setView] = useState<View>('survey');
@@ -42,6 +43,13 @@ export default function App() {
         >
           📕 오답노트
         </button>
+        <button
+          type="button"
+          className={`app-tab ${view === 'lesson' ? 'active' : ''}`}
+          onClick={() => setView('lesson')}
+        >
+          📋 수업현황
+        </button>
       </nav>
       {view === 'survey' && (
         <SurveyTest
@@ -61,6 +69,7 @@ export default function App() {
           onStartTest={goToSurvey}
         />
       )}
+      {view === 'lesson' && <LessonLog />}
     </div>
   );
 }
